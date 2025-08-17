@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>Sneakylinks — Hostels & Gadgets</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0f1115;          /* charcoal */
+      --card:#151821;
+      --card-2:#1b2030;
+      --text:#e6edf3;
+      --muted:#94a3b8;
+      --teal:#19b6a5;
+      --blue:#2aa7ff;
+      --ring: rgba(42,167,255,.28);
+      --radius:14px;
+    }
+    :root.light{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --card-2:#eef2f7;
+      --text:#0b1530;
+      --muted:#56647a;
+      --teal:#0fb49a;
+      --blue:#0f6b8a;
+      --ring: rgba(15,107,138,.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    a{color:inherit}
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:1000;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 16px;
+      background:linear-gradient(180deg, rgba(20,24,33,.96), rgba(20,24,33,.88));
+      backdrop-filter:saturate(140%) blur(8px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .brand{display:flex; align-items:center; gap:10px; user-select:none; cursor:pointer}
+    .logo{
+      width:42px; height:42px; border-radius:12px;
+      display:grid; place-items:center;
+      background:
+        radial-gradient(120px 60px at 20% 120%, rgba(26,182,165,.45), transparent 50%),
+        radial-gradient(120px 60px at 120% -10%, rgba(42,167,255,.35), transparent 50%),
+        linear-gradient(135deg, #1a9690, #2aa7ff);
+      color:#fff; font-weight:800; letter-spacing:.5px;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);
+    }
+    .brand-name{font-weight:800; letter-spacing:.3px}
+    /* Mode toggle */
+    .actions{display:flex; align-items:center; gap:10px}
+    .icon-btn{
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 10px; border-radius:10px; background:transparent; color:var(--text);
+      cursor:pointer; font-weight:700;
+    }
+    .icon-btn:active{transform:scale(.98)}
+    /* Hero */
+    .hero{
+      margin:8px auto 8px;
+      max-width:1200px; padding:10px 16px;
+    }
+    .hero-card{
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(26,182,165,.08), rgba(42,167,255,.08));
+      border:1px solid rgba(255,255,255,.08);
+      padding:18px;
+    }
+    .hero h2{margin:0 0 6px}
+    .hero p{margin:0; color:var(--muted)}
+    /* Controls */
+    .controls{max-width:1200px; margin:8px auto 12px; padding:0 16px; display:flex; gap:10px; justify-content:space-between; align-items:center}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{padding:8px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.14); background:var(--card-2); cursor:pointer; font-weight:700}
+    .tab.active{outline:2px solid var(--ring)}
+    .search{display:flex; gap:8px; align-items:center}
+    .search input{
+      padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.12);
+      background:var(--card); color:var(--text); min-width:220px;
+    }
+    /* Grid */
+    .container{max-width:1200px; margin:0 auto; padding:0 16px 40px}
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px}
+    .card{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px; overflow:hidden;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+      display:flex; flex-direction:column;
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .card:hover{transform:translateY(-4px); box-shadow:0 14px 30px rgba(0,0,0,.22)}
+    .thumb{aspect-ratio:4/3; width:100%; background:#0e1320; display:block; object-fit:cover}
+    .pad{padding:10px}
+    .title{font-weight:800}
+    .spec{font-size:13px; color:var(--muted); margin-top:4px}
+    .price{font-weight:800; color:var(--teal); margin-top:8px}
+    .row{display:flex; gap:8px; margin-top:10px}
+    .btn{
+      flex:1; border:none; border-radius:10px; padding:10px; cursor:pointer; font-weight:800;
+    }
+    .btn.view{background:var(--blue); color:#fff}
+    .btn.book{background:var(--teal); color:#001417}
+    /* Overlays */
+    .overlay{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); z-index:1200; padding:16px}
+    .modal{background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,.1); border-radius:16px; width:100%; max-width:520px; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); box-shadow:0 24px 60px rgba(0,0,0,.45)}
+    .modal.dragging{cursor:grabbing}
+    .modal .head{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,.06)}
+    .modal .title{font-size:16px; font-weight:800}
+    .close-x{background:#ff4d6d; color:#fff; border:none; width:30px; height:30px; border-radius:8px; font-weight:900; cursor:pointer}
+    .modal-body{padding:12px}
+    .modal label{display:block; font-size:13px; color:var(--muted); margin-top:8px}
+    .modal input, .modal select, .modal textarea{width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:var(--card-2); color:var(--text); margin-top:6px}
+    .modal .send{margin-top:12px; width:100%; padding:12px; border-radius:12px; border:none; background:linear-gradient(90deg,var(--teal),var(--blue)); color:#001417; font-weight:900; cursor:pointer}
+    /* Gallery modal */
+    .gallery{max-width:880px}
+    .gallery .img-main{width:100%; border-radius:12px; object-fit:cover; aspect-ratio:16/9; background:#0e1320}
+    .thumbs{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:10px}
+    .thumbs img{width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent}
+    .thumbs img.active{border-color:var(--blue)}
+    .toolbar{display:flex; gap:8px; margin-top:10px}
+    .tool-btn{flex:1; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:var(--card-2); color:var(--text); cursor:pointer; font-weight:800}
+    /* Admin bar */
+    .adminbar{position:fixed; bottom:14px; right:14px; z-index:1300; display:none; gap:8px}
+    .adminbar .save{background:var(--teal); color:#001417; border:none; padding:12px 14px; border-radius:12px; font-weight:900; cursor:pointer; box-shadow:0 10px 24px rgba(0,0,0,.3)}
+    .hint{font-size:12px; color:var(--muted); margin-top:6px}
+    /* Footer */
+    footer{padding:26px 16px; text-align:center; color:var(--muted)}
+    /* Responsive tweaks */
+    @media (max-width:600px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+      .gallery{max-width:96vw}
+      .thumbs{grid-template-columns:repeat(4,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="brand" id="brandTap">
+      <div class="logo" aria-label="Sneakylinks"><span>SL</span></div>
+      <div class="brand-name">Sneakylinks</div>
+    </div>
+    <div class="actions">
+      <button id="modeBtn" class="icon-btn" aria-label="Toggle theme">Dark ▾</button>
+    </div>
+  </div>
+
+  <!-- Hero (tight spacing) -->
+  <section class="hero">
+    <div class="hero-card">
+      <h2>Comfortable stays & trusted gadgets</h2>
+      <p>Browse hostels and gadgets. Book quickly via WhatsApp. Request missing items anytime.</p>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-filter="all">All</button>
+      <button class="tab" data-filter="hostel">Hostels</button>
+      <button class="tab" data-filter="gadget">Gadgets</button>
+    </div>
+    <div class="search">
+      <input type="search" id="search" placeholder="Search by name or spec…" />
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <main class="container">
+    <div id="grid" class="grid"></div>
+  </main>
+
+  <!-- Booking Modal -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" style="display:none">
+    <div id="bookModal" class="modal" aria-labelledby="bkTitle">
+      <div class="head">
+        <div class="title" id="bkTitle">Book</div>
+        <button class="close-x" onclick="closeBooking()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="bkPrice" class="price"></div>
+        <form id="bkForm">
+          <label for="bkName">Name</label><input id="bkName" required/>
+          <label for="bkLoc">Location</label><input id="bkLoc" required/>
+          <label for="bkPhone">Telephone number</label><input id="bkPhone" inputmode="tel" required/>
+          <label for="bkTo">Send booking to</label>
+          <select id="bkTo" required>
+            <option value="">Choose number</option>
+            <option value="0597053192">0597053192</option>
+            <option value="0594708232">0594708232</option>
+            <option value="0594438054">0594438054</option>
+          </select>
+          <button class="send" type="submit">Send via WhatsApp</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gallery Modal (View only) -->
+  <div id="overlayGal" class="overlay" role="dialog" aria-modal="true" style="display:none">
+    <div class="modal gallery" id="galModal">
+      <div class="head">
+        <div class="title" id="galTitle">Preview</div>
+        <button class="close-x" onclick="closeGallery()">×</button>
+      </div>
+      <div class="modal-body">
+        <img id="galMain" class="img-main" alt="Preview"/>
+        <div class="thumbs" id="galThumbs"></div>
+        <div class="toolbar" id="galTools" style="display:none">
+          <label class="tool-btn" for="imgUpload">Replace Image</label>
+          <input id="imgUpload" type="file" accept="image/*" style="display:none"/>
+          <button class="tool-btn" id="editSpecsBtn">Edit Specs</button>
+        </div>
+        <div class="hint">Tip: Swipe thumbnails to preview other images.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Form (homepage) -->
+  <section class="container">
+    <div class="hero-card" style="margin-top:8px;">
+      <h3 style="margin:0 0 6px">Request a device that isn't listed</h3>
+      <form id="reqForm">
+        <label for="rqName">Your name</label><input id="rqName" required/>
+        <label for="rqPhone">Telephone number</label><input id="rqPhone" inputmode="tel" required/>
+        <label for="rqPref">Describe the device you want</label>
+        <textarea id="rqPref" rows="3" placeholder="e.g., iPhone 13, 128GB, very good battery" required></textarea>
+        <label for="rqTo">Send request to</label>
+        <select id="rqTo" required>
+          <option value="">Choose number</option>
+          <option value="0597053192">0597053192</option>
+          <option value="0594708232">0594708232</option>
+          <option value="0594438054">0594438054</option>
+        </select>
+        <button class="send" type="submit">Send Request via WhatsApp</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="adminbar" id="adminBar">
+    <button class="save" id="saveBtn">Save changes</button>
+  </div>
+
+  <footer>© Sneakylinks • Built for quick WhatsApp bookings</footer>
+
+<script>
+/* ===== Theme Toggle ===== */
+const root = document.documentElement;
+const modeBtn = document.getElementById('modeBtn');
+function setLight(on){
+  if(on){ root.classList.add('light'); modeBtn.textContent = 'Light ▾'; localStorage.setItem('sl_theme','light'); }
+  else  { root.classList.remove('light'); modeBtn.textContent = 'Dark ▾';  localStorage.setItem('sl_theme','dark'); }
+}
+modeBtn.addEventListener('click', ()=>{
+  const isLight = !root.classList.contains('light');
+  setLight(isLight);
+});
+// init
+setLight(localStorage.getItem('sl_theme') === 'light');
+
+/* ===== Data & Rendering ===== */
+const grid = document.getElementById('grid');
+const sample = i => ({
+  id: 'p'+i,
+  type: i%2===0 ? 'hostel' : 'gadget',
+  name: (i%2===0 ? 'Hostel ' : 'Gadget ') + i,
+  price: i%2===0 ? `GH₵ ${(900 + (i%10)*100).toLocaleString()}/month` : `GH₵ ${(800 + (i%10)*200).toLocaleString()}`,
+  spec: i%2===0 ? 'Wi‑Fi • AC • Near Campus' : 'Quality • Warranty • Great Battery',
+  images: [
+    `https://via.placeholder.com/800x600?text=${(i%2===0 ? 'Hostel' : 'Gadget')}+${i}+A`,
+    `https://via.placeholder.com/800x600?text=${(i%2===0 ? 'Hostel' : 'Gadget')}+${i}+B`,
+    `https://via.placeholder.com/800x600?text=${(i%2===0 ? 'Hostel' : 'Gadget')}+${i}+C`,
+    `https://via.placeholder.com/800x600?text=${(i%2===0 ? 'Hostel' : 'Gadget')}+${i}+D`
+  ]
+});
+let items = Array.from({length:30}, (_,i)=> sample(i+1));
+// load saved edits
+const saved = localStorage.getItem('sl_items');
+if(saved){ try{ items = JSON.parse(saved); }catch(e){} }
+
+function render(){
+  grid.innerHTML='';
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const active = document.querySelector('.tab.active')?.dataset.filter || 'all';
+  items.forEach((p,idx)=>{
+    if(active!=='all' && p.type!==active) return;
+    if(q && !(`${p.name} ${p.spec} ${p.price}`.toLowerCase().includes(q))) return;
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="card" data-id="${p.id}">
+        <img class="thumb" src="${p.images[0]}" alt="${p.name}">
+        <div class="pad">
+          <div class="title" data-field="name">${p.name}</div>
+          <div class="spec" data-field="spec">${p.spec}</div>
+          <div class="price" data-field="price">${p.price}</div>
+          <div class="row">
+            <button class="btn view" data-action="view">View</button>
+            <button class="btn book" data-action="book">Book</button>
+          </div>
+        </div>
+      </div>`);
+  });
+}
+render();
+
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click', (e)=>{
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  e.currentTarget.classList.add('active'); render();
+}));
+document.getElementById('search').addEventListener('input', render);
+
+/* ===== Booking ===== */
+const overlay = document.getElementById('overlay');
+const bkTitle = document.getElementById('bkTitle');
+const bkPrice = document.getElementById('bkPrice');
+let currentItem = null;
+grid.addEventListener('click', (e)=>{
+  const card = e.target.closest('.card'); if(!card) return;
+  const id = card.dataset.id;
+  const item = items.find(x=>x.id===id);
+  if(!item) return;
+  if(e.target.matches('[data-action="book"]')){
+    currentItem = item;
+    bkTitle.textContent = item.name;
+    bkPrice.textContent = item.price;
+    overlay.style.display='flex';
+  } else if(e.target.matches('[data-action="view"]')){
+    openGallery(item);
+  }
+});
+function closeBooking(){ overlay.style.display='none'; }
+function toWa(num){ return '233' + num.slice(1); }
+document.getElementById('bkForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const to = document.getElementById('bkTo').value;
+  if(!to) return;
+  const msg = `Booking Details:%0AProduct: ${encodeURIComponent(bkTitle.textContent)}%0APrice: ${encodeURIComponent(bkPrice.textContent)}%0AName: ${encodeURIComponent(bkName.value)}%0ALocation: ${encodeURIComponent(bkLoc.value)}%0ATelephone: ${encodeURIComponent(bkPhone.value)}`;
+  window.open(`https://wa.me/${toWa(to)}?text=${msg}`, '_blank');
+  closeBooking();
+});
+
+/* ===== Gallery (view only) ===== */
+const overlayGal = document.getElementById('overlayGal');
+const galTitle = document.getElementById('galTitle');
+const galMain = document.getElementById('galMain');
+const galThumbs = document.getElementById('galThumbs');
+const galTools = document.getElementById('galTools');
+let galItem = null;
+function openGallery(item){
+  galItem = item;
+  galTitle.textContent = item.name;
+  galMain.src = item.images[0]; galMain.alt = item.name;
+  galThumbs.innerHTML = '';
+  item.images.forEach((src,i)=>{
+    const im = document.createElement('img');
+    im.src = src; if(i===0) im.classList.add('active');
+    im.addEventListener('click', ()=>{
+      document.querySelectorAll('#galThumbs img').forEach(t=>t.classList.remove('active'));
+      im.classList.add('active');
+      galMain.src = src;
+    });
+    galThumbs.appendChild(im);
+  });
+  galTools.style.display = isAdmin ? 'flex' : 'none';
+  overlayGal.style.display='flex';
+}
+function closeGallery(){ overlayGal.style.display='none'; }
+
+// Replace image (admin)
+document.getElementById('imgUpload').addEventListener('change', (e)=>{
+  const f = e.target.files?.[0]; if(!f || !galItem) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    galItem.images[0] = ev.target.result;
+    galMain.src = ev.target.result;
+    // update corresponding card thumb
+    const card = document.querySelector(`.card[data-id="${galItem.id}"] .thumb`);
+    if(card) card.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+/* ===== Admin Mode (password via 5 taps on logo) ===== */
+let tapCount = 0, tapTimer = null;
+let isAdmin = false;
+const brandTap = document.getElementById('brandTap');
+brandTap.addEventListener('click', ()=>{
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(()=> tapCount=0, 1200);
+  if(tapCount>=5){
+    tapCount=0;
+    const pass = prompt('Enter admin password:');
+    if(pass === (localStorage.getItem('sl_admin_pass')||'sneaky2025')){
+      enableAdmin();
+      alert('Admin mode enabled');
+    }else{
+      alert('Wrong password');
+    }
+  }
+});
+
+function enableAdmin(){
+  isAdmin = true;
+  document.getElementById('adminBar').style.display='flex';
+  // make fields editable
+  document.querySelectorAll('[data-field]').forEach(el=>{
+    el.contentEditable = 'true';
+    el.style.outline = '2px dashed rgba(42,167,255,.35)';
+    el.style.outlineOffset = '2px';
+  });
+  // add long-press to change image from card
+  grid.querySelectorAll('.card .thumb').forEach(img=>{
+    img.addEventListener('click', ()=>{
+      // Open gallery then allow replace
+      const id = img.closest('.card').dataset.id;
+      const item = items.find(x=>x.id===id);
+      openGallery(item);
+    });
+  });
+}
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  // collect edits from DOM back to items
+  document.querySelectorAll('.card').forEach(card=>{
+    const id = card.dataset.id;
+    const it = items.find(x=>x.id===id);
+    if(!it) return;
+    it.name = card.querySelector('[data-field="name"]').innerText.trim();
+    it.spec = card.querySelector('[data-field="spec"]').innerText.trim();
+    it.price = card.querySelector('[data-field="price"]').innerText.trim();
+    // image already synced from gallery replace
+    // no-op
+  });
+  localStorage.setItem('sl_items', JSON.stringify(items));
+  alert('Changes saved');
+  render();
+  if(isAdmin) enableAdmin(); // reapply edit UI after rerender
+});
+
+/* ===== Request Form ===== */
+document.getElementById('reqForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const to = document.getElementById('rqTo').value;
+  if(!to) return;
+  const msg = `Customer Request:%0AName: ${encodeURIComponent(rqName.value)}%0APhone: ${encodeURIComponent(rqPhone.value)}%0ARequest: ${encodeURIComponent(rqPref.value)}`;
+  window.open(`https://wa.me/${toWa(to)}?text=${msg}`,'_blank');
+});
+
+/* Accessibility: prevent accidental zoom via dblclick */
+document.addEventListener('dblclick', (e)=>{ e.preventDefault(); }, {passive:false});
+</script>
+</body>
+</html>
